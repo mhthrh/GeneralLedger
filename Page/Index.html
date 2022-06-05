@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .column {
+            flex: 50%;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Api Services</h2>
+<br>
+<br>
+<div>
+    <label id="LBLResult"></label>
+</div>
+<div class="row">
+    <div class="column" style="background-color:#aaa;">
+        <label>User Name: </label><input id="InpUserNameSignIn">
+        <br>
+        <br>
+        <label>Password: </label><input id="InpPasswordSignIn">
+        <br>
+        <br>
+        <button id="BtnSignIn">SignIn</button>
+
+    </div>
+    <div class="column" style="background-color:#bbb;">
+        <div>
+            <select id="selectType">
+                <option value="0">Select an option</option>
+                <option value="1">Deposit</option>
+                <option value="2">Withdrawal</option>
+            </select>
+        </div>
+
+        <label>Account: </label><input id="Account">
+        <br>
+        <br>
+        <label>Amount: </label><input id="Amount">
+        <br>
+        <br>
+        <label>Note: </label><input id="Note">
+        <br>
+        <br>
+        <label>Sign: </label><input id="Sign">
+        <br>
+
+        <button id="BtnSend">Send</button>
+    </div>
+    <div class="column" style="background-color:#ccc;">
+        <label>Account: </label><input id="AccountFind">
+        <br>
+        <br>
+        <label>From : </label> <input  type="date" id="FromDate" >
+        <br>
+        <br>
+        <label>To : </label><input type="date" id="ToDate">
+        <br>
+        <br>
+        <label>Sign : </label><input id="SignSearch">
+        <br>
+        <br>
+        <button id="BtnFind">Search</button>
+    </div>
+
+</div>
+
+<script >
+
+    document.getElementById("BtnSignIn").addEventListener("click", (e) => {
+        let User = document.getElementById("InpUserNameSignIn");
+        let Pass = document.getElementById("InpPasswordSignIn");
+        fetch('http://localhost:8585/login', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+            },
+            body: JSON.stringify({
+                "username"   :User.value,
+                "password"   :Pass.value,
+            }),
+        })
+            .then(function (response){
+                return response.text()
+            })
+            .then(function (data){
+                console.log(data)
+                document.getElementById('LBLResult').innerHTML = data;
+            });
+    })
+   document.getElementById("BtnSend").addEventListener("click", (e) => {
+        console.log(document.getElementById("selectType").value)
+        fetch('http://localhost:8585/transaction', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+            },
+
+            body:
+                JSON.stringify({
+                transaction: {
+                    "account"   : document.getElementById("Account").value,
+                    "amount"   :parseFloat(  document.getElementById("Amount").value),
+                    "note"   :document.getElementById("Note").value,
+                    "action"   :parseInt(document.getElementById("selectType").value)
+
+                },
+                sign:document.getElementById("Sign").value
+            }),
+        })
+            .then(function (response){
+                return response.text()
+            })
+            .then(function (data){
+                console.log(data)
+                document.getElementById('LBLResult').innerHTML = data;
+
+            });
+    })
+    //
+   document.getElementById("BtnFind").addEventListener("click", (e) => {
+        let ticket = document.getElementById("ticket");
+        fetch('http://localhost:8585/transactions', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+            },
+            body: JSON.stringify({
+                "account"  :document.getElementById("AccountFind").value,
+                "fromDate" :document.getElementById("FromDate").value,
+                "toDate"   :document.getElementById("ToDate").value,
+                "sign"     :document.getElementById("SignSearch").value
+            }),
+        })
+            .then(function (response){
+                return response.text()
+            })
+            .then(function (data){
+                console.log(data)
+                document.getElementById('LBLResult').innerHTML = data;
+            });
+    })
+
+</script>
+</body>
+</html>
