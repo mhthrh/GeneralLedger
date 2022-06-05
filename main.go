@@ -17,11 +17,12 @@ import (
 
 func main() {
 	//ConfigUtil.WriteConfig()
-	cfg := ConfigUtil.ReadConfig("Config/ConfigCoded.json")
+	//cfg := ConfigUtil.ReadConfig("Config/ConfigCoded.json")
+	cfg := ConfigUtil.ReadConfig("Config/ConfigPlane.json")
 	if cfg == nil {
 		log.Fatalln("Cant read Config,By")
 	}
-	logger := LogUtil.New()
+	logger := LogUtil.New() // can set output log to display, file, both or anywhere else
 	sm := mux.NewRouter()
 	db := DbPool.New(&DbPool.DbInfo{
 		Host:            cfg.DB[0].Host,
@@ -30,8 +31,8 @@ func main() {
 		Pass:            cfg.DB[0].User.Password,
 		Dbname:          cfg.DB[0].Dbname,
 		Driver:          cfg.DB[0].Driver,
-		ConnectionCount: 10,
-		RefreshPeriod:   20,
+		ConnectionCount: 10, // connection pool count
+		RefreshPeriod:   20, // refresh time for checking connection health!
 	})
 	View.RunApiOnRouter(sm, logger, db, cfg)
 

@@ -22,7 +22,7 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 }
 func (c *Controller) Transaction(w http.ResponseWriter, r *http.Request) {
 	var i Transaction.Request
-	cc := make(chan bool, 1)
+	chn := make(chan bool, 1)
 	req := make(chan error, 1)
 	i = r.Context().Value(Key{}).(Transaction.Request)
 	go func(ch *chan bool) {
@@ -32,15 +32,15 @@ func (c *Controller) Transaction(w http.ResponseWriter, r *http.Request) {
 			Amount:  i.Transaction.Amount,
 			Note:    i.Transaction.Note,
 			Action:  i.Transaction.Action,
-		}, &cc, &req)
+		}, &chn, &req)
 		c.db.Push(d)
 
-	}(&cc)
+	}(&chn)
 	for {
 		select {
 		case <-r.Context().Done():
-			cc <- false
-			fmt.Println("time out")
+			chn <- false
+			c.l.Println("time out occur")
 			Result.New(1, http.StatusOK, fmt.Sprintf("%s%s", "kir shodi, time out", r.Context().Err())).SendResponse(w)
 			return
 		case response := <-req:

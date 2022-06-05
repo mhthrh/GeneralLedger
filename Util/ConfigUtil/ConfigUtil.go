@@ -58,12 +58,15 @@ func ReadConfig(file string) *Config {
 	var jsonMap *Config
 
 	JsonUtil.New(nil, nil).Json2Struct([]byte(func() string {
-		k := CryptoUtil.NewKey()
-		k.Text, _ = FileUtil.New(d, file).Read()
-		k.Decrypt()
-		return k.Result
+		text, _ := FileUtil.New(d, file).Read()
+		return text
 	}()), &jsonMap)
-
+	//JsonUtil.New(nil, nil).Json2Struct([]byte(func() string {
+	//	k := CryptoUtil.NewKey()
+	//	k.Text, _ = FileUtil.New(d, file).Read()
+	//	k.Decrypt()
+	//	return k.Result
+	//}()), &jsonMap)
 	return jsonMap
 }
 

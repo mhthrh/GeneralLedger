@@ -54,11 +54,10 @@ func (t *tool) Login(r *Request) *Response {
 		},
 		Err: "",
 	}
-	kir := CryptoUtil.NewKey()
-	kir.Text = r.Password
-	kir.Sha256()
-	//PgSql.ExecuteCommand(fmt.Sprintf("INSERT INTO public.\"Users\"(\"ID\", \"UserName\", \"Password\", \"Email\", \"createDate\")VALUES ('%s', '%s', '%s', '%s', '%s')", uuid.NewUUID(), "mohsen", kir.Result, "taheri.mo@outlook.com", time.Now()), t.db)
-	rows, err := PgSql.RunQuery(t.db, fmt.Sprintf("SELECT \"ID\", \"UserName\", \"Email\" FROM public.\"Users\" where \"UserName\"='%s' and \"Password\"='%s'", r.Username, kir.Result))
+	SignedPassword := CryptoUtil.NewKey()
+	SignedPassword.Text = r.Password
+	SignedPassword.Sha256()
+	rows, err := PgSql.RunQuery(t.db, fmt.Sprintf("SELECT \"ID\", \"UserName\", \"Email\" FROM public.\"Users\" where \"UserName\"='%s' and \"Password\"='%s'", r.Username, SignedPassword.Result))
 	if err != nil {
 		res.Err = err.Error()
 		return &res

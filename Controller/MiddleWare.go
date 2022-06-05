@@ -28,7 +28,7 @@ type Controller struct {
 }
 
 var (
-	InvalidPath = fmt.Errorf("invalid Path, path must be /ViewControler/[id]")
+	InvalidPath = fmt.Errorf("invalid Path, path must be{s}")
 )
 
 type GenericError struct {
@@ -48,17 +48,11 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		fNext := func(in interface{}) {
-			//setting time out for method
+			//setting time out for methods
 			cnt, _ := context.WithTimeout(context.WithValue(r.Context(), Key{}, in), 5000*time.Millisecond)
 			r = r.WithContext(cnt)
 			next.ServeHTTP(w, r)
 		}
-		b.l.WithFields(map[string]interface{}{
-			"method": r.Method,
-			"path":   r.URL,
-			"status": nil,
-		}).Info("request details")
-
 		if r.Host != fmt.Sprintf("%s:%d", b.Conf.Server.IP, b.Conf.Server.Port) {
 			err := errors.New("access denied")
 			Result.New(1002, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
@@ -73,14 +67,14 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 				err := JsonUtil.New(nil, r.Body).FromJSON(&obj)
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1003, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
 				errs := b.v.Validate(obj)
 				if len(errs) != 0 {
 					b.l.Println(errs)
 					j := JsonUtil.New(nil, nil).Struct2Json(ValidationError{Messages: errs.Errors()}.Messages)
-					Result.New(1010, http.StatusUnprocessableEntity, j).SendResponse(w)
+					Result.New(1004, http.StatusUnprocessableEntity, j).SendResponse(w)
 					return
 				}
 				fNext(obj)
@@ -91,25 +85,25 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 				err := JsonUtil.New(nil, r.Body).FromJSON(&obj)
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1005, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				info, err := decrypt(obj.Sign)
+				sign, err := decrypt(obj.Sign)
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1006, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				signedTime, err := time.Parse(time.UnixDate, info[1])
+				signedTime, err := time.Parse(time.UnixDate, sign[1])
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1007, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
 				now, err := time.Parse(time.UnixDate, time.Now().Format(time.UnixDate))
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1008, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
 				if !signedTime.After(now) {
@@ -133,31 +127,30 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 				err := JsonUtil.New(nil, r.Body).FromJSON(&obj)
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1011, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				info, err := decrypt(obj.Sign)
+				sign, err := decrypt(obj.Sign)
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1012, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				signedTime, err := time.Parse(time.UnixDate, info[1])
+				signedTime, err := time.Parse(time.UnixDate, sign[1])
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1013, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
 				now, err := time.Parse(time.UnixDate, time.Now().Format(time.UnixDate))
 				if err != nil {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
+					Result.New(1014, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
 				if !signedTime.After(now) {
 					b.l.Println(err)
-					Result.New(1009, http.StatusForbidden, "check sign key.").SendResponse(w)
-					return
+					Result.New(1015, http.StatusForbidden, "check sign key.").SendResponse(w)
 					return
 				}
 
@@ -165,7 +158,7 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 				if len(errs) != 0 {
 					b.l.Println(err)
 					j := JsonUtil.New(nil, nil).Struct2Json(ValidationError{Messages: errs.Errors()}.Messages)
-					Result.New(1010, http.StatusUnprocessableEntity, j).SendResponse(w)
+					Result.New(1016, http.StatusUnprocessableEntity, j).SendResponse(w)
 					return
 				}
 				fNext(obj)
@@ -173,12 +166,13 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 			}
 		case "/page":
 			{
+				b.l.Println("Loading UI")
 				http.ServeFile(w, r, "./Page/index.html")
 			}
 		default:
 			{
 				err := errors.New("pageNotFound")
-				Result.New(1020, http.StatusNotFound, GenericError{Message: err.Error()}.Message).SendResponse(w)
+				Result.New(1017, http.StatusNotFound, GenericError{Message: err.Error()}.Message).SendResponse(w)
 			}
 		}
 
@@ -188,7 +182,7 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 func decrypt(s string) ([]string, error) {
 	defer func() {
 		r := recover()
-		if &r != nil {
+		if (&r) != nil {
 			//Result.New(1002, http.StatusInternalServerError, GenericError{Message: ""}.Message).SendResponse(w)
 			fmt.Println(&r)
 		}
@@ -199,5 +193,9 @@ func decrypt(s string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(k.Result, "#"), nil
+	spl := strings.Split(k.Result, "#")
+	if len(spl) > 1 {
+		return spl, nil
+	}
+	return nil, fmt.Errorf("error in sign key")
 }
