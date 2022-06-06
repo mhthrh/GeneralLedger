@@ -1,5 +1,6 @@
 **General Ledger(GL)**
 ----
+
 Introduction
 ============
 Design and implement general ledger with deposit, withdrew and query of transactions.
@@ -11,7 +12,7 @@ Golang: ver 1.18
 PostgresSQL: ver 14.1
 
 Main features
-- JWT support for security with configurable duration. 
+- JWT support for security (180 seconds). 
 - Service time out support with context and channel
 - Dictionary result set
 - Multi media log support
@@ -23,7 +24,7 @@ StartApplication
 ============
 - Configuration file
 
-You can find config file in "./Files/ConfigPlane.json" and change start IP, Port and change postgresSQL database config on your own DB.
+You must find config file in "./Files/ConfigPlane.json" and change start IP, Port and change postgresSQL database config on your own DB.
 
 - Run
     - go run ./main.go
@@ -122,32 +123,37 @@ Transaction Query
       "account": "914300118110",
       "amount": 2,
       "note": "test-1",
-      "action": 0
+      "action": 1
     },
     {
       "account": "914300118110",
       "amount": -12345678,
       "note": "test-2",
-      "action": 0
+      "action": 1
     },
     {
       "account": "914300118110",
       "amount": 100,
       "note": "test-3",
-      "action": 0
+      "action": 2
     },
     {
       "account": "914300118110",
       "amount": 1.22,
       "note": "test-4",
-      "action": 0
+      "action": 1
     },
     {
       "account": "914300118110",
       "amount": 1,
       "note": "test-5",
-      "action": 0
+      "action": 1
     }
   ]
 }
 ```
+
+
+##By: Mohsen Taheri 
+##Email: taheri.mo@outlook.com
+##Phone: +447759448882
