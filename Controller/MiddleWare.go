@@ -46,10 +46,10 @@ func New(l *logrus.Entry, v *ValidationUtil.Validation, db *DbPool.DBs, c *Confi
 }
 func (b *Controller) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		var timeOut = 5000 * time.Millisecond
 		fNext := func(in interface{}) {
 			//setting time out for methods
-			cnt, _ := context.WithTimeout(context.WithValue(r.Context(), Key{}, in), 5000*time.Millisecond)
+			cnt, _ := context.WithTimeout(context.WithValue(r.Context(), Key{}, in), timeOut)
 			r = r.WithContext(cnt)
 			next.ServeHTTP(w, r)
 		}
