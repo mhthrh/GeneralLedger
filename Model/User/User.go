@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pborman/uuid"
+	"strings"
 	"time"
 )
 
@@ -32,6 +33,11 @@ type Response struct {
 type tool struct {
 	db *sql.DB
 }
+
+var (
+	validationDuration time.Duration = 180 * time.Second
+	dateFormat                       = time.UnixDate
+)
 
 func New(db *sql.DB) *tool {
 	return &tool{db: db}
@@ -71,13 +77,33 @@ func (t *tool) Login(r *Request) *Response {
 	}
 	accounts, _ := Account.New(t.db).Load(user.Id)
 
-	j := CryptoUtil.NewKey()
 	res.IsActive = true
-	res.ValidTill = time.Now().Add(180 * time.Second).Format(time.UnixDate)
-	j.Text = fmt.Sprintf("%s#%s", r.Username, res.ValidTill)
-	j.Encrypt()
+	res.ValidTill = time.Now().Add(validationDuration).Format(dateFormat)
 	res.Accounts = accounts
-	res.Sign = j.Result
+	res.Sign = t.GenerateSignKey(r.Username, validationDuration)
 
 	return &res
+}
+
+func (t *tool) GenerateSignKey(userName string, validationDuration time.Duration) string {
+	j := CryptoUtil.NewKey()
+	j.Text = fmt.Sprintf("%s#%s", userName, time.Now().Add(validationDuration).Format(dateFormat))
+	j.Encrypt()
+	return j.Result
+}
+
+func (t *tool) CheckSignKey(signedKey string) ([]string, error) {
+
+	k := CryptoUtil.NewKey()
+	k.Text = signedKey
+	err := k.Decrypt()
+	if err != nil {
+		return nil, err
+	}
+	spl := strings.Split(k.Result, "#")
+	if len(spl) > 1 {
+		return spl, nil
+	}
+	return nil, fmt.Errorf("error in sign key")
+
 }

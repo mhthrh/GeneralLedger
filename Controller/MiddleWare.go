@@ -5,7 +5,6 @@ import (
 	"GitHub.com/mhthrh/GL/Model/Transaction"
 	"GitHub.com/mhthrh/GL/Model/User"
 	"GitHub.com/mhthrh/GL/Util/ConfigUtil"
-	"GitHub.com/mhthrh/GL/Util/CryptoUtil"
 	"GitHub.com/mhthrh/GL/Util/DbUtil/DbPool"
 	"GitHub.com/mhthrh/GL/Util/JsonUtil"
 	"GitHub.com/mhthrh/GL/Util/ValidationUtil"
@@ -29,6 +28,7 @@ type Controller struct {
 
 var (
 	InvalidPath = fmt.Errorf("invalid Path, path must be{s}")
+	timeOut     = 5000 * time.Millisecond
 )
 
 type GenericError struct {
@@ -46,7 +46,6 @@ func New(l *logrus.Entry, v *ValidationUtil.Validation, db *DbPool.DBs, c *Confi
 }
 func (b *Controller) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var timeOut = 5000 * time.Millisecond
 		fNext := func(in interface{}) {
 			//setting time out for methods
 			cnt, _ := context.WithTimeout(context.WithValue(r.Context(), Key{}, in), timeOut)
@@ -88,7 +87,7 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 					Result.New(1005, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				sign, err := decrypt(obj.Sign)
+				sign, err := User.New(nil).CheckSignKey(obj.Sign)
 				if err != nil {
 					b.l.Println(err)
 					Result.New(1006, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
@@ -130,7 +129,7 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 					Result.New(1011, http.StatusBadRequest, GenericError{Message: err.Error()}.Message).SendResponse(w)
 					return
 				}
-				sign, err := decrypt(obj.Sign)
+				sign, err := User.New(nil).CheckSignKey(obj.Sign)
 				if err != nil {
 					b.l.Println(err)
 					Result.New(1012, http.StatusForbidden, GenericError{Message: err.Error()}.Message).SendResponse(w)
@@ -179,23 +178,6 @@ func (b *Controller) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func decrypt(s string) ([]string, error) {
-	defer func() {
-		r := recover()
-		if (&r) != nil {
-			//Result.New(1002, http.StatusInternalServerError, GenericError{Message: ""}.Message).SendResponse(w)
-			fmt.Println(&r)
-		}
-	}()
-	k := CryptoUtil.NewKey()
-	k.Text = s
-	err := k.Decrypt()
-	if err != nil {
-		return nil, err
-	}
-	spl := strings.Split(k.Result, "#")
-	if len(spl) > 1 {
-		return spl, nil
-	}
-	return nil, fmt.Errorf("error in sign key")
+func Check(interf interface{}, w11 http.ResponseWriter) {
+
 }
